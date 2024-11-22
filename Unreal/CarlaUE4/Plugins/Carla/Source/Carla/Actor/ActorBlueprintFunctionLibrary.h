@@ -13,6 +13,7 @@
 #include "Carla/Actor/VehicleParameters.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/Radar.h"
+#include "Carla/Sensor/RadarRayTracing.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -105,6 +106,13 @@ public:
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeRadarDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeRadarRayTracingDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeRadarRayTracingDefinition(
       bool &Success,
       FActorDefinition &Definition);
 
@@ -226,4 +234,7 @@ public:
   static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
   static void SetRadar(const FActorDescription &Description, ARadar *Radar);
+
+  static void SetRadarRayTracing(const FActorDescription &Description, ARayTraceRadar *Radar);
+
 };

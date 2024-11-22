@@ -19,9 +19,11 @@
 #include <carla/sensor/data/SemanticLidarMeasurement.h>
 #include <carla/sensor/data/GnssMeasurement.h>
 #include <carla/sensor/data/RadarMeasurement.h>
+#include <carla/sensor/data/RayTraceRadarMeasurement.h>
 #include <carla/sensor/data/DVSEventArray.h>
 
 #include <carla/sensor/data/RadarData.h>
+#include <carla/sensor/data/RayTraceRadarData.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -119,6 +121,14 @@ namespace data {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const RayTraceRadarMeasurement &meas) {
+    out << "RayTraceRadarMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", point_count=" << std::to_string(meas.GetDetectionAmount())
+        << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const DVSEvent &event) {
     out << "Event(x=" << std::to_string(event.x)
         << ", y=" << std::to_string(event.y)
@@ -139,6 +149,15 @@ namespace data {
 
   std::ostream &operator<<(std::ostream &out, const RadarDetection &det) {
     out << "RadarDetection(velocity=" << std::to_string(det.velocity)
+        << ", azimuth=" << std::to_string(det.azimuth)
+        << ", altitude=" << std::to_string(det.altitude)
+        << ", depth=" << std::to_string(det.depth)
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const RayTraceRadarDetection &det) {
+    out << "RayTraceRadarDetection(velocity=" << std::to_string(det.velocity)
         << ", azimuth=" << std::to_string(det.azimuth)
         << ", altitude=" << std::to_string(det.altitude)
         << ", depth=" << std::to_string(det.depth)
@@ -522,11 +541,33 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<csd::RayTraceRadarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RayTraceRadarMeasurement>>("RayTraceRadarMeasurement", no_init)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::RayTraceRadarMeasurement>)
+    .def("get_detection_count", &csd::RayTraceRadarMeasurement::GetDetectionAmount)
+    .def("__len__", &csd::RayTraceRadarMeasurement::size)
+    .def("__iter__", iterator<csd::RayTraceRadarMeasurement>())
+    .def("__getitem__", +[](const csd::RayTraceRadarMeasurement &self, size_t pos) -> csd::RayTraceRadarDetection {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::RayTraceRadarMeasurement &self, size_t pos, const csd::RayTraceRadarDetection &detection) {
+      self.at(pos) = detection;
+    })
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<csd::RadarDetection>("RadarDetection")
     .def_readwrite("velocity", &csd::RadarDetection::velocity)
     .def_readwrite("azimuth", &csd::RadarDetection::azimuth)
     .def_readwrite("altitude", &csd::RadarDetection::altitude)
     .def_readwrite("depth", &csd::RadarDetection::depth)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::RayTraceRadarDetection>("RayTraceRadarDetection")
+    .def_readwrite("velocity", &csd::RayTraceRadarDetection::velocity)
+    .def_readwrite("azimuth", &csd::RayTraceRadarDetection::azimuth)
+    .def_readwrite("altitude", &csd::RayTraceRadarDetection::altitude)
+    .def_readwrite("depth", &csd::RayTraceRadarDetection::depth)
     .def(self_ns::str(self_ns::self))
   ;
 

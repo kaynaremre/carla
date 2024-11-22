@@ -887,6 +887,65 @@ void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeRadarRayTracingDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeRadarRayTracingDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeRadarRayTracingDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("radarraytrace"));
+  AddVariationsForSensor(Definition);
+
+  FActorVariation HorizontalFOV;
+  HorizontalFOV.Id = TEXT("horizontal_fov");
+  HorizontalFOV.Type = EActorAttributeType::Float;
+  HorizontalFOV.RecommendedValues = { TEXT("30") };
+  HorizontalFOV.bRestrictToRecommended = false;
+
+  FActorVariation VerticalFOV;
+  VerticalFOV.Id = TEXT("vertical_fov");
+  VerticalFOV.Type = EActorAttributeType::Float;
+  VerticalFOV.RecommendedValues = { TEXT("30") };
+  VerticalFOV.bRestrictToRecommended = false;
+
+  FActorVariation Range;
+  Range.Id = TEXT("range");
+  Range.Type = EActorAttributeType::Float;
+  Range.RecommendedValues = { TEXT("100") };
+  Range.bRestrictToRecommended = false;
+
+  FActorVariation PointsPerSecond;
+  PointsPerSecond.Id = TEXT("points_per_second");
+  PointsPerSecond.Type = EActorAttributeType::Int;
+  PointsPerSecond.RecommendedValues = { TEXT("1500") };
+  PointsPerSecond.bRestrictToRecommended = false;
+
+  // Noise seed
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    HorizontalFOV,
+    VerticalFOV,
+    Range,
+    PointsPerSecond,
+    NoiseSeed});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeLidarDefinition(
     const FString &Id)
 {
@@ -1730,6 +1789,33 @@ void UActorBlueprintFunctionLibrary::SetIMU(
 void UActorBlueprintFunctionLibrary::SetRadar(
     const FActorDescription &Description,
     ARadar *Radar)
+{
+  CARLA_ABFL_CHECK_ACTOR(Radar);
+  constexpr float TO_CENTIMETERS = 1e2;
+
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    Radar->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    Radar->SetSeed(Radar->GetRandomEngine()->GenerateRandomSeed());
+  }
+
+  Radar->SetHorizontalFOV(
+      RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
+  Radar->SetVerticalFOV(
+      RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
+  Radar->SetRange(
+      RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
+  Radar->SetPointsPerSecond(
+      RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
+}
+
+void UActorBlueprintFunctionLibrary::SetRadarRayTracing(
+    const FActorDescription &Description,
+    ARayTraceRadar *Radar)
 {
   CARLA_ABFL_CHECK_ACTOR(Radar);
   constexpr float TO_CENTIMETERS = 1e2;

@@ -1,6 +1,6 @@
 #include "Carla.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
-
+#include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Settings/CarlaSettings.h"
 
 #include "Async.h"
